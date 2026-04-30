@@ -1,0 +1,56 @@
+[project]
+name = "financial-accounting"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django==4.2.3",
+    "django-extensions>=4.1",
+    "ipython>=9.12.0",
+    "pytest>=9.0.3",
+    "pytest-django>=4.12.0",
+]
+
+[dependency-groups]
+dev = [
+    "loguru>=0.7.3",
+    "mypy>=1.19.1",
+    "ruff>=0.15.4",
+    "pre-commit>=4.5.1",
+]
+
+[tool.ruff]
+exclude = [
+    "*/migrations/*",
+    ".venv",
+    "__pycache__"
+]
+
+[tool.ruff.lint]
+select = ["F", "W", "D", "ANN"]
+ignore = [
+    "D100",
+    "D101",
+    "D104",
+    "D105"
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+exclude = "tests"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "finance_settings.settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = ""
+
+# ruff check; mypy .
