@@ -1,0 +1,15 @@
+[
+  {"model": "finance.category", "pk": 1,  "fields": {"name": "Зарплата",    "type": "income"}},
+  {"model": "finance.category", "pk": 2,  "fields": {"name": "Фриланс",     "type": "income"}},
+  {"model": "finance.category", "pk": 3,  "fields": {"name": "Подработка",  "type": "income"}},
+  {"model": "finance.category", "pk": 4,  "fields": {"name": "Инвестиции",  "type": "income"}},
+  {"model": "finance.category", "pk": 5,  "fields": {"name": "Другое",      "type": "income"}},
+  {"model": "finance.category", "pk": 6,  "fields": {"name": "Продукты",    "type": "expense"}},
+  {"model": "finance.category", "pk": 7,  "fields": {"name": "Транспорт",   "type": "expense"}},
+  {"model": "finance.category", "pk": 8,  "fields": {"name": "Жильё",       "type": "expense"}},
+  {"model": "finance.category", "pk": 9,  "fields": {"name": "Развлечения", "type": "expense"}},
+  {"model": "finance.category", "pk": 10, "fields": {"name": "Здоровье",    "type": "expense"}},
+  {"model": "finance.category", "pk": 11, "fields": {"name": "Одежда",      "type": "expense"}},
+  {"model": "finance.category", "pk": 12, "fields": {"name": "Связь",       "type": "expense"}},
+  {"model": "finance.category", "pk": 13, "fields": {"name": "Другое",      "type": "expense"}}
+]

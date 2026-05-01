@@ -1,28 +1,36 @@
-.PHONY: help test lint format type-check check install-dev clean
+.PHONY: help test lint format type-check check up down migrate
 
-# Default target
 help:
-	@echo "Available commands:"
-	@echo "  test         - Run pytest tests"
-	@echo "  lint         - Run ruff linter"
-	@echo "  type-check   - Run mypy type checking"
-	@echo "  check        - Run all checks (lint, type-check, test)"
+	@echo "Команды:"
+	@echo "  up           — Запустить docker-compose"
+	@echo "  down         — Остановить docker-compose"
+	@echo "  migrate      — Применить миграции"
+	@echo "  test         — Запустить тесты (pytest)"
+	@echo "  lint         — Проверка ruff"
+	@echo "  format       — Автоформатирование ruff"
+	@echo "  type-check   — Проверка типов mypy"
+	@echo "  check        — Все проверки (lint, type-check, test)"
 
-# Install development dependencies
-install-dev:
-	pip install pytest pytest-django ruff mypy
+up:
+	docker-compose up --build
 
-# Run pytest tests
+down:
+	docker-compose down
+
+migrate:
+	uv run python manage.py migrate
+
 test:
-	pytest .
+	uv run pytest
 
-# Run ruff linter
 lint:
-	ruff check .
+	uv run ruff check .
 
-# Run mypy type checking
+format:
+	uv run ruff format .
+	uv run ruff check --fix .
+
 type-check:
-	mypy .
+	uv run mypy .
 
-# Run all quality checks
 check: lint type-check test

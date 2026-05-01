@@ -20,5 +20,6 @@ repos:
     rev: v1.19.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests]
-        args: [--ignore-missing-imports]
+        additional_dependencies: [types-requests, "django-stubs[compatible-mypy]", celery, python-dotenv, django-filter, redis]
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tests|finance/migrations)/

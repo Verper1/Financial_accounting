@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+.agents/
+AGENTS.md
+test_db.sqlite3
+skills-lock.json
+
 # Distribution / packaging
 .Python
 build/
