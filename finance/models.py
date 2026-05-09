@@ -22,7 +22,7 @@ class Category(models.Model):
         ordering = ["type", "name"]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.get_type_display()})"
+        return self.name
 
 
 class Transaction(models.Model):

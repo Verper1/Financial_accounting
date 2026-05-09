@@ -10,6 +10,22 @@
     <button type="submit" class="btn">Фильтровать</button>
 </form>
 
+{% if current_type == "income" %}
+<div class="summary">
+    <span class="summary-income">Всего заработано за это время: {{ total_income }} ₽</span>
+</div>
+{% elif current_type == "expense" %}
+<div class="summary">
+    <span class="summary-expense">Всего потрачено за это время: {{ total_expense }} ₽</span>
+</div>
+{% else %}
+<div class="summary">
+    <span class="summary-income">Доходы: {{ total_income }} ₽</span>
+    <span class="summary-divider">|</span>
+    <span class="summary-expense">Расходы: {{ total_expense }} ₽</span>
+</div>
+{% endif %}
+
 <table>
     <thead>
         <tr>

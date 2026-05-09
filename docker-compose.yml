@@ -14,6 +14,7 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    profiles: ["full"]
 
   web:
     build: .
@@ -24,7 +25,6 @@ services:
       - "8000:8000"
     depends_on:
       - db
-      - redis
     env_file:
       - .env
     environment:
@@ -42,6 +42,7 @@ services:
       - .env
     environment:
       - DB_ENGINE=postgresql
+    profiles: ["full"]
 
   celery-beat:
     build: .
@@ -55,6 +56,7 @@ services:
       - .env
     environment:
       - DB_ENGINE=postgresql
+    profiles: ["full"]
 
 volumes:
   postgres_data:

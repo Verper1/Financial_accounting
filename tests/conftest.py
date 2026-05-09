@@ -5,8 +5,17 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.cache import cache
 
 from finance.models import Category, Transaction
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache() -> None:
+    """Очищает кэш перед каждым тестом."""
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture

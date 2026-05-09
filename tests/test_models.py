@@ -20,8 +20,7 @@ class TestCategory:
 
     def test_category_str(self) -> None:
         category = Category.objects.create(name="Фриланс", type="income")
-        assert "Фриланс" in str(category)
-        assert "Доход" in str(category)
+        assert str(category) == "Фриланс"
 
     def test_category_ordering(self) -> None:
         Category.objects.create(name="Продукты", type="expense")

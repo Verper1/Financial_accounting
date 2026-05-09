@@ -1,26 +1,14 @@
 {% extends "finance/base.html" %}
 
-{% block title %}{{ page_title }} — Финансовый учёт{% endblock %}
+{% block title %}Профиль — Финансовый учёт{% endblock %}
 
 {% block content %}
-<h1>{{ page_title }}</h1>
+<h1>Личный кабинет</h1>
 
-<form method="post" novalidate>
+<h2>Изменить ник</h2>
+<form method="post">
     {% csrf_token %}
-    {% for field in form %}
-    {% if field.name == "is_mandatory" %}
-    <div class="checkbox-row">
-        {{ field }}
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {% if field.errors %}
-        <ul class="errors">
-            {% for error in field.errors %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </div>
-    {% else %}
+    {% for field in username_form %}
     <div class="form-group">
         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
         {{ field }}
@@ -32,16 +20,35 @@
         </ul>
         {% endif %}
     </div>
-    {% endif %}
     {% endfor %}
-    {% if form.non_field_errors %}
+    <button type="submit" name="update_username" class="btn btn-primary">Сохранить ник</button>
+</form>
+
+<hr class="section-divider">
+
+<h2>Сменить пароль</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in password_form %}
+    <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <ul class="errors">
+            {% for error in field.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% if password_form.non_field_errors %}
     <ul class="errors">
-        {% for error in form.non_field_errors %}
+        {% for error in password_form.non_field_errors %}
         <li>{{ error }}</li>
         {% endfor %}
     </ul>
     {% endif %}
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-    <a href="{% url 'dashboard' %}" class="btn">Отмена</a>
+    <button type="submit" name="update_password" class="btn btn-primary">Сменить пароль</button>
 </form>
 {% endblock %}

@@ -1,41 +1,22 @@
-from datetime import date
-from typing import Any
-
 import django_filters
-from django.db.models import QuerySet
+from django import forms
 
 from finance.models import Category, Transaction
 
-MONTH_NAMES = {
-    1: "Январь",
-    2: "Февраль",
-    3: "Март",
-    4: "Апрель",
-    5: "Май",
-    6: "Июнь",
-    7: "Июль",
-    8: "Август",
-    9: "Сентябрь",
-    10: "Октябрь",
-    11: "Ноябрь",
-    12: "Декабрь",
-}
-
-
-def _generate_month_choices() -> list[tuple[str, str]]:
-    """Генерирует список последних 12 месяцев для фильтра."""
-    choices: list[tuple[str, str]] = [("", "Все месяцы")]
-    today = date.today()
-    for i in range(12):
-        month = today.month - i
-        year = today.year
-        while month <= 0:
-            month += 12
-            year -= 1
-        value = f"{year}-{month:02d}"
-        label = f"{MONTH_NAMES[month]} {year}"
-        choices.append((value, label))
-    return choices
+MONTH_CHOICES: list[tuple[str, str]] = [
+    ("1", "Январь"),
+    ("2", "Февраль"),
+    ("3", "Март"),
+    ("4", "Апрель"),
+    ("5", "Май"),
+    ("6", "Июнь"),
+    ("7", "Июль"),
+    ("8", "Август"),
+    ("9", "Сентябрь"),
+    ("10", "Октябрь"),
+    ("11", "Ноябрь"),
+    ("12", "Декабрь"),
+]
 
 
 class TransactionFilter(django_filters.FilterSet):
@@ -44,39 +25,27 @@ class TransactionFilter(django_filters.FilterSet):
     type = django_filters.ChoiceFilter(
         choices=Transaction.TransactionType.choices,
         label="Тип операции",
+        empty_label="Все операции",
     )
     category = django_filters.ModelChoiceFilter(
         queryset=Category.objects.all(),
         label="Категория",
+        empty_label="Все категории",
+    )
+    year = django_filters.NumberFilter(
+        field_name="date",
+        lookup_expr="year",
+        label="Год",
+        widget=forms.NumberInput(attrs={"placeholder": "Год"}),
     )
     month = django_filters.ChoiceFilter(
-        method="filter_by_month",
+        field_name="date",
+        lookup_expr="month",
         label="Месяц",
-        choices=[],
+        choices=MONTH_CHOICES,
+        empty_label="Все месяцы",
     )
 
     class Meta:
         model = Transaction
         fields: list[str] = []
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.filters["month"].extra["choices"] = _generate_month_choices()
-
-    def filter_by_month(
-        self,
-        queryset: QuerySet[Transaction],
-        name: str,
-        value: str,
-    ) -> QuerySet[Transaction]:
-        """Фильтрация по месяцу в формате YYYY-MM."""
-        if not value:
-            return queryset
-        try:
-            year, month = value.split("-")
-            return queryset.filter(
-                date__year=int(year),
-                date__month=int(month),
-            )
-        except (ValueError, AttributeError):
-            return queryset

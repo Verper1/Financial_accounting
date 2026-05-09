@@ -101,27 +101,35 @@ LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+_redis_url = os.getenv("REDIS_URL")
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", "redis://redis:6379/0"),
+if _redis_url:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": _redis_url,
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+CELERY_BROKER_URL = _redis_url or ""
+CELERY_RESULT_BACKEND = _redis_url or ""
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Moscow"
 
-from celery.schedules import crontab
+if _redis_url:
+    from celery.schedules import crontab
 
-CELERY_BEAT_SCHEDULE = {
-    "recalculate-monthly-cache": {
-        "task": "finance.tasks.recalculate_monthly_cache",
-        "schedule": crontab(minute=1, hour=0),
-    },
-}
+    CELERY_BEAT_SCHEDULE = {
+        "recalculate-monthly-cache": {
+            "task": "finance.tasks.recalculate_monthly_cache",
+            "schedule": crontab(minute=1, hour=0),
+        },
+    }

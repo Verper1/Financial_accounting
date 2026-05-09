@@ -5,7 +5,11 @@ import datetime
 import pytest
 from django.contrib.auth.models import User
 
-from finance.forms import TransactionForm
+from finance.forms import (
+    ProfilePasswordForm,
+    ProfileUsernameForm,
+    TransactionForm,
+)
 from finance.models import Category
 
 
@@ -21,12 +25,12 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "income",
                 "category": income_category.id,
                 "source": "ООО Тест",
                 "amount": "10000.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert form.is_valid(), form.errors
 
@@ -38,13 +42,13 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "expense",
                 "category": expense_category.id,
                 "source": "Магазин",
                 "amount": "500.00",
                 "is_mandatory": True,
             },
             user=user,
+            initial={"type": "expense"},
         )
         assert form.is_valid(), form.errors
 
@@ -56,12 +60,12 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today() + datetime.timedelta(days=1),
-                "type": "income",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "100.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert not form.is_valid()
         assert "date" in form.errors
@@ -74,12 +78,12 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today() - datetime.timedelta(days=365 * 6),
-                "type": "income",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "100.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert not form.is_valid()
         assert "date" in form.errors
@@ -92,12 +96,12 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "income",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "0.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert not form.is_valid()
         assert "amount" in form.errors
@@ -110,12 +114,12 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "income",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "-100.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert not form.is_valid()
         assert "amount" in form.errors
@@ -129,44 +133,49 @@ class TestTransactionForm:
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "expense",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "100.00",
                 "is_mandatory": True,
             },
             user=user,
+            initial={"type": "expense"},
         )
         assert not form.is_valid()
 
     def test_is_mandatory_hidden_for_income(
         self,
         user: User,
-        income_category: Category,
     ) -> None:
-        """Поле is_mandatory скрыто для дохода (через data)."""
+        """Поле is_mandatory скрыто для дохода."""
         form = TransactionForm(
-            data={
-                "type": "income",
-            },
             user=user,
+            initial={"type": "income"},
         )
         assert "is_mandatory" not in form.fields
 
     def test_is_mandatory_required_for_expense(
         self,
         user: User,
-        expense_category: Category,
     ) -> None:
         """Поле is_mandatory обязательно для расхода."""
         form = TransactionForm(
-            data={
-                "type": "expense",
-            },
             user=user,
+            initial={"type": "expense"},
         )
         assert "is_mandatory" in form.fields
         assert form.fields["is_mandatory"].required is True
+
+    def test_type_field_not_in_form(
+        self,
+        user: User,
+    ) -> None:
+        """Поле type не отображается в форме."""
+        form = TransactionForm(
+            user=user,
+            initial={"type": "income"},
+        )
+        assert "type" not in form.fields
 
     def test_category_queryset_filtered_for_income(
         self,
@@ -175,8 +184,8 @@ class TestTransactionForm:
     ) -> None:
         """Для дохода показываются только категории дохода."""
         form = TransactionForm(
-            data={"type": "income"},
             user=user,
+            initial={"type": "income"},
         )
         qs = form.fields["category"].queryset
         assert qs.count() == 2
@@ -189,83 +198,56 @@ class TestTransactionForm:
     ) -> None:
         """Для расхода показываются только категории расхода."""
         form = TransactionForm(
-            data={"type": "expense"},
             user=user,
+            initial={"type": "expense"},
         )
         qs = form.fields["category"].queryset
         assert qs.count() == 2
         assert all(c.type == "expense" for c in qs)
 
-    def test_save_sets_user(
+    def test_save_sets_user_and_type_from_initial(
         self,
         user: User,
         income_category: Category,
     ) -> None:
-        """Метод save привязывает запись к пользователю."""
+        """Метод save привязывает запись к пользователю и ставит тип из initial."""
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "income",
                 "category": income_category.id,
                 "source": "Тест",
                 "amount": "100.00",
             },
             user=user,
+            initial={"type": "income"},
         )
         assert form.is_valid()
         transaction = form.save()
         assert transaction.user == user
+        assert transaction.type == "income"
         assert transaction.is_mandatory is None
 
-    def test_income_sets_is_mandatory_none(
+    def test_save_expense_type_from_initial(
         self,
         user: User,
-        income_category: Category,
+        expense_category: Category,
     ) -> None:
-        """Для дохода is_mandatory всегда None."""
+        """Для расхода type и is_mandatory сохраняются корректно."""
         form = TransactionForm(
             data={
                 "date": datetime.date.today(),
-                "type": "income",
-                "category": income_category.id,
+                "category": expense_category.id,
                 "source": "Тест",
-                "amount": "5000.00",
+                "amount": "500.00",
+                "is_mandatory": True,
             },
             user=user,
+            initial={"type": "expense"},
         )
         assert form.is_valid()
         transaction = form.save()
-        assert transaction.is_mandatory is None
-
-    def test_initial_type_filters_categories_income(
-        self,
-        user: User,
-        categories: list,
-    ) -> None:
-        """Initial type=income фильтрует категории и скрывает is_mandatory."""
-        form = TransactionForm(
-            initial={"type": "income"},
-            user=user,
-        )
-        qs = form.fields["category"].queryset
-        assert qs.count() == 2
-        assert all(c.type == "income" for c in qs)
-        assert "is_mandatory" not in form.fields
-
-    def test_initial_type_filters_categories_expense(
-        self,
-        user: User,
-        categories: list,
-    ) -> None:
-        """Initial type=expense фильтрует категории и делает is_mandatory обязательным."""
-        form = TransactionForm(
-            initial={"type": "expense"},
-            user=user,
-        )
-        qs = form.fields["category"].queryset
-        assert qs.count() == 2
-        assert all(c.type == "expense" for c in qs)
-        assert form.fields["is_mandatory"].required is True
+        assert transaction.type == "expense"
+        assert transaction.is_mandatory is True
 
     def test_instance_type_filters_on_edit(
         self,
@@ -281,3 +263,73 @@ class TestTransactionForm:
         qs = form.fields["category"].queryset
         assert all(c.type == "income" for c in qs)
         assert "is_mandatory" not in form.fields
+        assert "type" not in form.fields
+
+
+@pytest.mark.django_db
+class TestProfileUsernameForm:
+    """Тесты формы смены ника."""
+
+    def test_valid_username_change(self, user: User) -> None:
+        form = ProfileUsernameForm(
+            data={"username": "newname"},
+            instance=user,
+        )
+        assert form.is_valid(), form.errors
+
+    def test_duplicate_username_rejected(
+        self,
+        user: User,
+        other_user: User,
+    ) -> None:
+        form = ProfileUsernameForm(
+            data={"username": "otheruser"},
+            instance=user,
+        )
+        assert not form.is_valid()
+        assert "username" in form.errors
+
+    def test_same_username_allowed(self, user: User) -> None:
+        form = ProfileUsernameForm(
+            data={"username": "testuser"},
+            instance=user,
+        )
+        assert form.is_valid()
+
+
+@pytest.mark.django_db
+class TestProfilePasswordForm:
+    """Тесты формы смены пароля."""
+
+    def test_valid_password_change(self, user: User) -> None:
+        form = ProfilePasswordForm(
+            data={
+                "old_password": "testpass123",
+                "new_password1": "Str0ng!NewPass",
+                "new_password2": "Str0ng!NewPass",
+            },
+            user=user,
+        )
+        assert form.is_valid(), form.errors
+
+    def test_wrong_old_password(self, user: User) -> None:
+        form = ProfilePasswordForm(
+            data={
+                "old_password": "wrongpass",
+                "new_password1": "Str0ng!NewPass",
+                "new_password2": "Str0ng!NewPass",
+            },
+            user=user,
+        )
+        assert not form.is_valid()
+
+    def test_passwords_dont_match(self, user: User) -> None:
+        form = ProfilePasswordForm(
+            data={
+                "old_password": "testpass123",
+                "new_password1": "Str0ng!NewPass",
+                "new_password2": "DifferentPass1",
+            },
+            user=user,
+        )
+        assert not form.is_valid()

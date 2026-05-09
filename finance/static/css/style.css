@@ -57,6 +57,7 @@ h1 {
 .income { color: #2e7d32; }
 .expense { color: #c62828; }
 .balance { color: #1565c0; }
+.balance.negative { color: #c62828; }
 
 .actions {
     display: flex;
@@ -187,3 +188,29 @@ th {
     margin-top: 15px;
     align-items: center;
 }
+
+.section-divider {
+    margin: 30px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.summary {
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.summary-income { color: #2e7d32; }
+.summary-expense { color: #c62828; }
+.summary-divider { margin: 0 10px; color: #999; }

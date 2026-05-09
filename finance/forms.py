@@ -4,6 +4,7 @@ from typing import Any
 
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from finance.models import Category, Transaction
@@ -16,7 +17,6 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = (
             "date",
-            "type",
             "category",
             "source",
             "amount",
@@ -27,8 +27,8 @@ class TransactionForm(forms.ModelForm):
                 attrs={"type": "date"},
                 format="%Y-%m-%d",
             ),
-            "type": forms.Select(attrs={"id": "id_type"}),
             "category": forms.Select(attrs={"id": "id_category"}),
+            "is_mandatory": forms.CheckboxInput(),
         }
 
     def __init__(
@@ -43,6 +43,7 @@ class TransactionForm(forms.ModelForm):
         self._user = user
 
         transaction_type = self._get_transaction_type()
+
         if transaction_type == Transaction.TransactionType.INCOME:
             del self.fields["is_mandatory"]
             self.fields["category"].queryset = Category.objects.filter(  # type: ignore[attr-defined]
@@ -55,9 +56,7 @@ class TransactionForm(forms.ModelForm):
             self.fields["is_mandatory"].required = True
 
     def _get_transaction_type(self) -> str | None:
-        """Определяет тип операции из данных формы или instance."""
-        if self.data.get("type"):
-            return str(self.data.get("type"))
+        """Определяет тип операции из instance или initial."""
         if self.instance and self.instance.pk and self.instance.type:
             return self.instance.type
         if self.initial.get("type"):
@@ -92,7 +91,7 @@ class TransactionForm(forms.ModelForm):
             return cleaned
 
         category: Category | None = cleaned.get("category")
-        transaction_type: str | None = cleaned.get("type")
+        transaction_type = self._get_transaction_type()
 
         if category and transaction_type:
             if category.type != transaction_type:
@@ -107,8 +106,83 @@ class TransactionForm(forms.ModelForm):
         transaction = super().save(commit=False)
         if self._user:
             transaction.user = self._user
+
+        transaction_type = self._get_transaction_type()
+        if transaction_type:
+            transaction.type = transaction_type
+
         if transaction.type == Transaction.TransactionType.INCOME:
             transaction.is_mandatory = None
         if commit:
             transaction.save()
         return transaction
+
+
+class ProfileUsernameForm(forms.ModelForm):
+    """Форма изменения имени пользователя."""
+
+    class Meta:
+        model = User
+        fields = ("username",)
+
+    def clean_username(self) -> str:
+        """Проверяет уникальность ника, исключая текущего пользователя."""
+        username = self.cleaned_data["username"]
+        qs = User.objects.exclude(pk=self.instance.pk).filter(username=username)
+        if qs.exists():
+            raise ValidationError("Этот ник уже занят.")
+        return username
+
+
+class ProfilePasswordForm(forms.Form):
+    """Форма смены пароля."""
+
+    old_password = forms.CharField(
+        label="Старый пароль",
+        widget=forms.PasswordInput,
+    )
+    new_password1 = forms.CharField(
+        label="Новый пароль",
+        widget=forms.PasswordInput,
+    )
+    new_password2 = forms.CharField(
+        label="Подтвердите пароль",
+        widget=forms.PasswordInput,
+    )
+
+    def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._user = user
+
+    def clean_old_password(self) -> str:
+        """Проверяет, что старый пароль введён верно."""
+        old_password: str = self.cleaned_data["old_password"]
+        if self._user and not self._user.check_password(old_password):
+            raise ValidationError("Неверный старый пароль.")
+        return old_password
+
+    def clean(self) -> dict[str, Any] | None:
+        """Проверяет совпадение нового пароля и его сложность."""
+        cleaned = super().clean()
+        if not cleaned:
+            return cleaned
+
+        pw1 = cleaned.get("new_password1")
+        pw2 = cleaned.get("new_password2")
+
+        if pw1 and pw2 and pw1 != pw2:
+            raise ValidationError("Пароли не совпадают.")
+
+        if pw1 and self._user:
+            try:
+                validate_password(pw1, self._user)
+            except ValidationError as e:
+                raise ValidationError(e.messages)
+
+        return cleaned
+
+    def save(self) -> None:
+        """Сохраняет новый пароль."""
+        if self._user:
+            self._user.set_password(self.cleaned_data["new_password1"])
+            self._user.save()

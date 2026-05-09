@@ -20,13 +20,27 @@ def recalculate_monthly_cache() -> str:
     for user in users:
         income = _get_month_sum(user, "income", today)
         expense = _get_month_sum(user, "expense", today)
+        balance = _get_total_balance(user)
         month_key = f"{today.year}-{today.month:02d}"
 
-        cache_key_income = f"finance:monthly:{user.id}:{month_key}:income"
-        cache_key_expense = f"finance:monthly:{user.id}:{month_key}:expense"
-
-        cache.set(cache_key_income, f"{income:.2f}", timeout=None)
-        cache.set(cache_key_expense, f"{expense:.2f}", timeout=None)
+        try:
+            cache.set(
+                f"finance:monthly:{user.id}:{month_key}:income",
+                f"{income:.2f}",
+                timeout=None,
+            )
+            cache.set(
+                f"finance:monthly:{user.id}:{month_key}:expense",
+                f"{expense:.2f}",
+                timeout=None,
+            )
+            cache.set(
+                f"finance:balance:{user.id}",
+                f"{balance:.2f}",
+                timeout=None,
+            )
+        except Exception:
+            pass
         updated += 1
 
     return f"Обновлено пользователей: {updated}"
@@ -41,3 +55,16 @@ def _get_month_sum(user: User, transaction_type: str, today: date) -> Decimal:
         date__month=today.month,
     ).aggregate(total=Sum("amount"))
     return result["total"] or Decimal("0")
+
+
+def _get_total_balance(user: User) -> Decimal:
+    """Баланс = все доходы минус все расходы."""
+    income = Transaction.objects.filter(
+        user=user,
+        type="income",
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+    expense = Transaction.objects.filter(
+        user=user,
+        type="expense",
+    ).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+    return income - expense

@@ -52,6 +52,8 @@ class TestRecalculateMonthlyCache:
         )
         assert income_cache == "50000.00"
         assert expense_cache == "10000.00"
+        balance_cache = cache.get(f"finance:balance:{user.id}")
+        assert balance_cache == "40000.00"
 
     def test_task_with_no_transactions(
         self,
@@ -66,6 +68,8 @@ class TestRecalculateMonthlyCache:
             f"finance:monthly:{user.id}:{month_key}:income",
         )
         assert income_cache == "0.00"
+        balance_cache = cache.get(f"finance:balance:{user.id}")
+        assert balance_cache == "0.00"
 
     def test_task_multiple_users(
         self,

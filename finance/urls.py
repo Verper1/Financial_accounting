@@ -5,11 +5,15 @@ from finance.views import (
     TransactionDeleteView,
     TransactionUpdateView,
     dashboard,
+    profile,
+    signup,
     transaction_list,
 )
 
 urlpatterns = [
     path("", dashboard, name="dashboard"),
+    path("signup/", signup, name="signup"),
+    path("profile/", profile, name="profile"),
     path("transactions/", transaction_list, name="transaction_list"),
     path(
         "transactions/create/",

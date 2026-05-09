@@ -16,11 +16,12 @@
     </div>
     <div class="stat-card">
         <h3>Общий баланс</h3>
-        <p class="balance">{{ total_balance }} ₽</p>
+        <p class="balance{% if total_balance < 0 %} negative{% endif %}">{{ total_balance }} ₽</p>
     </div>
 </div>
 
 <div class="actions">
+    <a href="{% url 'transaction_list' %}" class="btn">Все записи</a>
     <a href="{% url 'transaction_list' %}?type=income" class="btn">Записи доходов</a>
     <a href="{% url 'transaction_list' %}?type=expense" class="btn">Записи расходов</a>
     <a href="{% url 'transaction_create' %}?type=income" class="btn btn-income">Добавить доход</a>
