@@ -1,0 +1,30 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Дашборд — Финансовый учёт{% endblock %}
+
+{% block content %}
+<h1>Финансовый дашборд</h1>
+
+<div class="stats">
+    <div class="stat-card">
+        <h3>Доход за месяц</h3>
+        <p class="income">{{ monthly_income }} ₽</p>
+    </div>
+    <div class="stat-card">
+        <h3>Расход за месяц</h3>
+        <p class="expense">{{ monthly_expense }} ₽</p>
+    </div>
+    <div class="stat-card">
+        <h3>Общий баланс</h3>
+        <p class="balance{% if total_balance < 0 %} negative{% endif %}">{{ total_balance }} ₽</p>
+    </div>
+</div>
+
+<div class="actions">
+    <a href="{% url 'transaction_list' %}" class="btn">Все записи</a>
+    <a href="{% url 'transaction_list' %}?type=income" class="btn">Записи доходов</a>
+    <a href="{% url 'transaction_list' %}?type=expense" class="btn">Записи расходов</a>
+    <a href="{% url 'transaction_create' %}?type=income" class="btn btn-income">Добавить доход</a>
+    <a href="{% url 'transaction_create' %}?type=expense" class="btn btn-expense">Добавить расход</a>
+</div>
+{% endblock %}

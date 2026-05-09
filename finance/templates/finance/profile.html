@@ -1,0 +1,54 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Профиль — Финансовый учёт{% endblock %}
+
+{% block content %}
+<h1>Личный кабинет</h1>
+
+<h2>Изменить ник</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in username_form %}
+    <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <ul class="errors">
+            {% for error in field.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" name="update_username" class="btn btn-primary">Сохранить ник</button>
+</form>
+
+<hr class="section-divider">
+
+<h2>Сменить пароль</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in password_form %}
+    <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <ul class="errors">
+            {% for error in field.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% if password_form.non_field_errors %}
+    <ul class="errors">
+        {% for error in password_form.non_field_errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <button type="submit" name="update_password" class="btn btn-primary">Сменить пароль</button>
+</form>
+{% endblock %}

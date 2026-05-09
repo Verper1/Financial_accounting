@@ -1,0 +1,83 @@
+[project]
+name = "financial-accounting"
+version = "0.1.0"
+description = "Финансовое приложение для учёта доходов и расходов"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django==4.2.3",
+    "django-extensions>=4.1",
+    "django-filter>=24.0",
+    "psycopg2-binary>=2.9",
+    "redis>=5.0",
+    "celery[redis]>=5.4",
+    "python-dotenv>=1.0",
+    "ipython>=9.12.0",
+    "pytest>=9.0.3",
+    "pytest-django>=4.12.0",
+    "pytest-cov>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "loguru>=0.7.3",
+    "mypy>=1.19.1",
+    "django-stubs[compatible-mypy]>=5.0",
+    "ruff>=0.15.4",
+    "pre-commit>=4.5.1",
+]
+
+[tool.ruff]
+exclude = [
+    "*/migrations/*",
+    ".venv",
+    "__pycache__",
+    ".git",
+]
+
+[tool.ruff.lint]
+select = ["F", "W", "D", "ANN"]
+ignore = [
+    "D100",
+    "D101",
+    "D102",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    "ANN401",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main"]
+ignore_missing_imports = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+exclude = ["tests", "migrations"]
+
+[tool.django-stubs]
+django_settings_module = "finance_settings.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "finance_settings.test_settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=. --cov-report=term-missing --cov-fail-under=80 --no-cov-on-fail"
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "manage.py",
+    "finance_settings/*",
+    "conftest.py",
+]
+
+[tool.coverage.report]
+skip_empty = true
